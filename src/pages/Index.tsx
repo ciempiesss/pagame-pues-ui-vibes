@@ -7,6 +7,7 @@ import GroupManagement from "@/pages/GroupManagement";
 import Balances from "@/pages/Balances";
 import Settings from "@/pages/Settings";
 import ExpenseDetail from "@/pages/ExpenseDetail";
+import SettleDebt from "@/pages/SettleDebt";
 
 const Index = () => {
   return (
@@ -18,6 +19,7 @@ const Index = () => {
         <Route path="/balances" element={<Balances />} />
         <Route path="/ajustes" element={<Settings />} />
         <Route path="/gastos/:id" element={<ExpenseDetail />} />
+        <Route path="/liquidar/:userId" element={<SettleDebt />} />
       </Routes>
       <Navigation />
     </div>
