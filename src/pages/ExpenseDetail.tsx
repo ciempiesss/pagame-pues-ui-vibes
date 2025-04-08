@@ -1,13 +1,14 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AvatarGroup } from "@/components/AvatarGroup";
-import { ChevronLeft, Receipt, Calendar, Users, Check, ArrowLeftRight } from "lucide-react";
+import { ChevronLeft, Receipt, Calendar, Users, Check, ArrowLeftRight, CheckCircle } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { es } from "date-fns/locale";
+import { toast } from "sonner";
 
 // Mock data para demostración
 const mockExpenseData = {
@@ -31,13 +32,24 @@ const mockExpenseData = {
 const ExpenseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  // En una app real, usaríamos el id para obtener los detalles del gasto
-  const expense = mockExpenseData;
+  const [expense, setExpense] = useState(mockExpenseData);
+  const [isSettling, setIsSettling] = useState(false);
   
   const amountPerPerson = expense.amount / expense.participants.length;
   const timeAgo = formatDistanceToNow(expense.date, { addSuffix: true, locale: es });
   const formattedDate = format(expense.date, "PPP", { locale: es });
+  
+  const handleMarkAsSettled = () => {
+    setIsSettling(true);
+    setTimeout(() => {
+      setExpense({
+        ...expense,
+        status: "settled"
+      });
+      setIsSettling(false);
+      toast.success("¡Gasto marcado como saldado!");
+    }, 800);
+  };
   
   return (
     <div className="p-4 pb-24 max-w-md mx-auto">
@@ -54,7 +66,13 @@ const ExpenseDetail = () => {
       </header>
       
       <div className="space-y-6 animate-fade-in">
-        <Card className="border-teal-100">
+        <Card className={`border-teal-100 relative ${expense.status === "settled" ? "bg-green-50" : ""}`}>
+          {expense.status === "settled" && (
+            <div className="absolute top-4 right-4 bg-green-500 text-white rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1">
+              <CheckCircle className="h-3 w-3" />
+              Saldado
+            </div>
+          )}
           <CardContent className="p-6">
             <h2 className="text-2xl font-bold mb-1">{expense.description}</h2>
             <p className="text-muted-foreground mb-4">{timeAgo}</p>
@@ -155,15 +173,36 @@ const ExpenseDetail = () => {
           </CardContent>
         </Card>
         
-        <Button 
-          className="w-full py-6 text-lg bg-accent hover:bg-amber-600 button-bounce"
-          onClick={() => {
-            // En una app real, esto marcaría el gasto como saldado
-          }}
-        >
-          <Check className="h-5 w-5 mr-2" />
-          Marcar como Saldado
-        </Button>
+        {expense.status === "pending" ? (
+          <Button 
+            className="w-full py-6 text-lg bg-accent hover:bg-amber-600 button-bounce"
+            onClick={handleMarkAsSettled}
+            disabled={isSettling}
+          >
+            {isSettling ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Procesando...
+              </span>
+            ) : (
+              <>
+                <Check className="h-5 w-5 mr-2" />
+                Marcar como Saldado
+              </>
+            )}
+          </Button>
+        ) : (
+          <Button 
+            className="w-full py-6 text-lg bg-green-100 text-green-800 hover:bg-green-200 cursor-default"
+            disabled
+          >
+            <CheckCircle className="h-5 w-5 mr-2" />
+            Gasto Saldado
+          </Button>
+        )}
       </div>
     </div>
   );
